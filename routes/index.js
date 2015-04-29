@@ -88,7 +88,6 @@ router.post('/games/new', function (req, res, next) {
 /* PUT: request to join a game */
 router.put('/join', function (req, res, next) {
   var gameID = req.body.game_id;
-  var req = req;
   console.log('User requested to join game %s: ', gameID);
   Game.find({ '_id': gameID, started: false}, function (err, record) {
     if (err || !record) {
@@ -108,7 +107,7 @@ router.put('/join', function (req, res, next) {
     createPlayer(gameID, playerNumber, function (err, record) {
       var player = record;
       if (err) return res.json({status: CODES.ERROR});
-      
+
       console.log('Player successfully created!');
       console.log(record);
 
@@ -150,14 +149,15 @@ router.put('/check', function (req, res, next) {
 
     // if (game.isFull())
 
-    if (!game.validMove(position)) return res.json({status: CODES.INVALID_MOVE});
+    if (!game.validMove(position))
+      return res.json({status: CODES.INVALID_MOVE});
 
     var result = game.makeMove(position);
     // Increment turn if the player doesn't closed a box
     if (result === 0) {
       var number = player.number;
       // Restart to player 1 turn or increment the player
-      number = (number === game.players) 1 : number + 1;
+      number = (number === game.players) ? 1 : number + 1;
 
       // Update game turn
       Player.findOne({game: game._id, number: number}, function (err, record) {
@@ -177,9 +177,7 @@ router.put('/check', function (req, res, next) {
 });
 
 function getPlayerGame(playerID, callback) {
-  var callback = callback;
   Player.find({ '_id': playerID }, function (err, player) {
-    var player = player;
     if (err) {
       console.error('NO SE ENCONTRÓ EL JUGADOR');
       return callback(err);
@@ -195,7 +193,6 @@ function getPlayerGame(playerID, callback) {
       callback(null, game, player);
     });
   });
-  
 }
 
 function createPlayer(gameID, number, callback) {
@@ -211,7 +208,5 @@ function createPlayer(gameID, number, callback) {
     callback(null, record);
   });
 }
-
-
 
 module.exports = router;

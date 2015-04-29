@@ -4,7 +4,6 @@ var async   = require('async');
 
 request = request.defaults({jar: true});
 
-
 var SERVER_URL = process.argv[2] || 'http://localhost:3000';
 var API = {
   'GET_GAMES': { method: 'GET', uri: '/games/'},

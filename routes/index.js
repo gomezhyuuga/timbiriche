@@ -89,7 +89,7 @@ router.post('/games/new', function (req, res, next) {
 router.put('/join', function (req, res, next) {
   var gameID = req.body.game_id;
   console.log('User requested to join game %s: ', gameID);
-  Game.find({ '_id': gameID, started: false}, function (err, record) {
+  Game.findOne({ '_id': gameID, started: false}, function (err, record) {
     if (err || !record) {
       console.error('ERROR BUSCANDO JUEGO');
       return res.json({status: CODES.NOT_FOUND});
@@ -195,10 +195,13 @@ function getPlayerGame(playerID, callback) {
   });
 }
 
-function createPlayer(gameID, number, callback) {
+function createPlayer(gameID, playerNumber, callback) {
+  console.log('DATA');
+  console.log(gameID);
+  console.log('NUBMER: ' + playerNumber);
   Player.create({
     game: gameID,
-    number: number
+    number: playerNumber
   }, function (err, record) {
     if (err) {
       console.error(err);

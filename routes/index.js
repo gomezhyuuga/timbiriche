@@ -20,7 +20,7 @@ var CODES = {
 }
 
 /* GET: list of all games. */
-router.get('/games/', function (req, res, next) {
+router.get('/games/', function (req, res) {
   Game.find({ started: false})
     .sort('name')
     .select('name')
@@ -34,7 +34,7 @@ router.get('/games/', function (req, res, next) {
 });
 
 /* GET: status of the game */
-router.get('/status', function (req, res, next) {
+router.get('/status', function (req, res) {
   var playerID = req.query.player_id || req.session.player_id;
   // Override parameter if session is present
   console.log('PLAYER_ID: ' + playerID);
@@ -43,12 +43,12 @@ router.get('/status', function (req, res, next) {
     if (!game) return res.json({status: CODES.NOT_FOUND});
 
     var response_data = {
-      number_of_players: game.players,
-      started: game.started,
       players_joined: game.playersJoined,
+      number_of_players: game.players,
+      board_size: game.boardSize,
+      started: game.started,
       score: game.score,
       name: game.name,
-      board_size: game.boardSize
     };
 
     // Game started?
@@ -62,9 +62,10 @@ router.get('/status', function (req, res, next) {
     // Game has finished?
     var finished = game.finished();
     if (finished) {
-      if (finished === 0) return res.json({status: CODES.DRAW});
-      if (finished === player.number) return res.json({status: CODES.WIN});
-      else return res.json({status: CODES.LOSE});
+      if (finished === 0) respone_data.status = CODES.DRAW;
+      if (finished === player.number) response_data.status = CODES.WIN;
+      else response_data.status = CODES.LOSE;
+      return res.json(response_data);
     }
 
     // If game not finished, then is the turn of someone
@@ -85,7 +86,7 @@ router.get('/status', function (req, res, next) {
 });
 
 /* POST: create a new game */
-router.post('/games/new', function (req, res, next) {
+router.post('/games/new', function (req, res) {
   var name = req.body.name;
   var players = req.body.players;
   var bsize = req.body.size;
@@ -117,7 +118,7 @@ router.post('/games/new', function (req, res, next) {
 });
 
 /* PUT: request to join a game */
-router.put('/join', function (req, res, next) {
+router.put('/join', function (req, res) {
   var gameID = req.body.game_id;
   console.log('User requested to join game %s: ', gameID);
   Game.findOne({ '_id': gameID, started: false}, function (err, record) {
@@ -170,7 +171,7 @@ router.put('/join', function (req, res, next) {
   });
 });
 /* PUT: make move */
-router.put('/make_move', function (req, res, next) {
+router.put('/make_move', function (req, res) {
   var playerID = req.body.player_id || req.session.player_id;
   var position = req.body.position;
   if (!position)
@@ -198,7 +199,7 @@ router.put('/make_move', function (req, res, next) {
         if (err) return res.json({status: CODES.ERROR});
 
         game.turn = record._id;
-        game.save(function (err, record) {
+        game.save(function (err) {
           if (err) return res.json({status: CODES.ERROR});
 
           return res.json({status: 'OK', boxesClosed: result});
@@ -221,7 +222,6 @@ function getPlayerGame(playerID, callback) {
         console.log('NO SE ENCONTRÓ EL JUEGO DEL JUGADOR');
         return callback(err);
       }
-      var game = game;
       console.log('GAME');
       console.log(game);
       callback(null, game, player);

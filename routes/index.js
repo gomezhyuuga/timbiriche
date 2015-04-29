@@ -35,13 +35,29 @@ router.get('/games/', function (req, res, next) {
 
 /* GET: status of the game */
 router.get('/status', function (req, res, next) {
-  var playerID = req.session.player_id;
+  var playerID = req.query.player_id || req.session.player_id;
+  // Override parameter if session is present
   console.log('PLAYER_ID: ' + playerID);
   getPlayerGame(playerID, function (err, game, player) {
     if (err) return res.json({status: CODES.ERROR});
+    if (!game) return res.json({status: CODES.NOT_FOUND});
+
+    var response_data = {
+      number_of_players: game.players,
+      started: game.started,
+      players_joined: game.playersJoined,
+      score: game.score,
+      name: game.name,
+      board_size: game.boardSize
+    };
 
     // Game started?
-    if (!game.started) return res.json({status: CODES.NOT_FULL});
+    if (!game.started) {
+      response_data.status = CODES.ROOM_NOT_FULL;
+      return res.json(response_data);
+    }
+
+    response_data.board = game.board;
 
     // Game has finished?
     var finished = game.finished();
@@ -52,8 +68,19 @@ router.get('/status', function (req, res, next) {
     }
 
     // If game not finished, then is the turn of someone
-    if (game.turn === playerID) return res.json({status: CODES.YOUR_TURN});
-    else return res.json({status: CODES.WAIT});
+    if (game.turn == playerID) {
+      response_data.status = CODES.YOUR_TURN;
+      response_data.turn = 'Player\'s ' + player.number + ' turn.';
+      return res.json(response_data);
+    }
+    // GET NUMBER OF PLAYER TURN
+    Player.findOne({_id: game.turn}, function (err, record) {
+      if (err || !record) return res.json({status: CODES.ERROR});
+
+      response_data.turn = 'Player\'s ' + record.number + ' turn.';
+      response_data.status = CODES.WAIT;
+      return res.json(response_data);
+    })
   })
 });
 
@@ -62,6 +89,10 @@ router.post('/games/new', function (req, res, next) {
   var name = req.body.name;
   var players = req.body.players;
   var bsize = req.body.size;
+  if (!name || !players || !bsize) {
+    return res.json({status: CODES.ERROR,
+      msg: 'You must specify [name, players, size]'});
+  }
   /*
   * FIRST create the game and save GAME_ID
   * THEN create a player and assign him the GAME_ID
@@ -139,9 +170,12 @@ router.put('/join', function (req, res, next) {
   });
 });
 /* PUT: make move */
-router.put('/check', function (req, res, next) {
-  var playerID = req.session.player_id;
+router.put('/make_move', function (req, res, next) {
+  var playerID = req.body.player_id || req.session.player_id;
   var position = req.body.position;
+  if (!position)
+    return res.json({status: CODES.ERROR, msg: 'position is required'});
+
   getPlayerGame(playerID, function (err, game, player) {
     if (err) return res.json({status: CODES.ERROR});
 
@@ -177,8 +211,8 @@ router.put('/check', function (req, res, next) {
 });
 
 function getPlayerGame(playerID, callback) {
-  Player.find({ '_id': playerID }, function (err, player) {
-    if (err) {
+  Player.findOne({ '_id': playerID }, function (err, player) {
+    if (err || !player) {
       console.error('NO SE ENCONTRÓ EL JUGADOR');
       return callback(err);
     }

@@ -153,8 +153,26 @@ router.put('/check', function (req, res, next) {
     if (!game.validMove(position)) return res.json({status: CODES.INVALID_MOVE});
 
     var result = game.makeMove(position);
+    // Increment turn if the player doesn't closed a box
+    if (result === 0) {
+      var number = player.number;
+      // Restart to player 1 turn or increment the player
+      number = (number === game.players) 1 : number + 1;
 
+      // Update game turn
+      Player.findOne({game: game._id, number: number}, function (err, record) {
+        if (err) return res.json({status: CODES.ERROR});
 
+        game.turn = record._id;
+        game.save(function (err, record) {
+          if (err) return res.json({status: CODES.ERROR});
+
+          return res.json({status: 'OK', boxesClosed: result});
+        });
+      });
+    } else {
+      return res.json({status: 'OK', boxesClosed: result});
+    }
   });
 });
 

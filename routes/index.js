@@ -37,7 +37,6 @@ router.get('/games/', function (req, res) {
 router.get('/status', function (req, res) {
   var playerID = req.query.player_id || req.session.player_id;
   // Override parameter if session is present
-  console.log('PLAYER_ID: ' + playerID);
   getPlayerGame(playerID, function (err, game, player) {
     if (err) return res.json({status: CODES.ERROR});
     if (!game) return res.json({status: CODES.NOT_FOUND});
@@ -176,18 +175,20 @@ router.put('/make_move', function (req, res) {
   var position = req.body.position;
   if (!position)
     return res.json({status: CODES.ERROR, msg: 'position is required'});
+  if (!playerID)
+    return res.json({status: CODES.ERROR, msg: 'player is required'});
 
   getPlayerGame(playerID, function (err, game, player) {
-    if (err) return res.json({status: CODES.ERROR});
+    if (err || !game) return res.json({status: CODES.ERROR});
 
-    if (game.turn !== player._id) return res.json({status: CODES.NOT_TURN});
+    if (game.turn.toString() != player._id.toString()) return res.json({status: CODES.NOT_TURN});
 
     // if (game.isFull())
 
     if (!game.validMove(position))
       return res.json({status: CODES.INVALID_MOVE});
 
-    var result = game.makeMove(position);
+    var result = game.makeMove(position, player.number);
     // Increment turn if the player doesn't closed a box
     if (result === 0) {
       var number = player.number;
@@ -206,7 +207,10 @@ router.put('/make_move', function (req, res) {
         });
       });
     } else {
-      return res.json({status: 'OK', boxesClosed: result});
+      game.save(function (err) {
+        if (err) return res.json({status: CODES.ERROR});
+        return res.json({status: 'OK', boxesClosed: result});
+      });
     }
   });
 });
@@ -224,15 +228,14 @@ function getPlayerGame(playerID, callback) {
       }
       console.log('GAME');
       console.log(game);
+      console.log('PLAYER');
+      console.log(player);
       callback(null, game, player);
     });
   });
 }
 
 function createPlayer(gameID, playerNumber, callback) {
-  console.log('DATA');
-  console.log(gameID);
-  console.log('NUBMER: ' + playerNumber);
   Player.create({
     game: gameID,
     number: playerNumber

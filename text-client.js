@@ -1,21 +1,20 @@
+var FileCookieStore = require('tough-cookie-filestore');
 var inq     = require('inquirer');
 var request = require('request');
 var async   = require('async');
-var FileCookieStore = require('tough-cookie-filestore');
-var jarContainer = request.jar(new FileCookieStore('cookies.json'));
-var cookies;
+var GameUtil = require('./controllers/gameUtil.js');
+var API = require('./api.js');
 
-TIMER = 1000;
+var jarContainer = request.jar();
+var cookies;
+var lastStatus;
+var lastTurn;
+var TIMER = 1000;
 
 request = request.defaults({jar: true});
 
 var SERVER_URL = process.argv[2] || 'http://localhost:3000';
-var API = {
-  'GET_GAMES': { method: 'GET', uri: '/games/'},
-  'CREATE_GAME': { method: 'POST', uri: '/games/new'},
-  'JOIN_GAME': { method: 'PUT', uri: '/join'},
-  'STATUS': { method: 'GET', uri: '/status'},
-}
+
 
 var MENU_CHOICES = [
   { value: 1, name: '1) Crear juego'},
@@ -107,6 +106,22 @@ function promptJoinGame(games, callback) {
     }
   );
 }
+function promptMakeMove(callback) {
+  inq.prompt({
+      type: 'input',
+      name: 'position',
+      message: 'Indica la posición a tirar: (e.g. B0)',
+      validate: function (value) {
+        // VALIDAR LETRANUM
+        return true;
+      },
+    },
+    function (answers) {
+      printAnswers(answers);
+      if (callback) callback(answers.position);
+    }
+  );
+}
 
 function joinGame(gameID, callback) {
   console.log('Trying to join game with ID: ' + gameID);
@@ -120,10 +135,10 @@ function joinGame(gameID, callback) {
       return promptMenu(main);
     }
     cookies = jarContainer.getCookies(url);
-    console.log('COOKIES');
-    console.log(cookies);
+    // console.log('COOKIES');
+    // console.log(cookies);
     body = JSON.parse(body);
-    console.log(body);
+    // console.log(body);
     if (body.status === 'FULL') {
       console.log('JUEGO LLENO. INTENTA OTRO JUEGO.');
       return promptMenu(main);
@@ -134,23 +149,81 @@ function joinGame(gameID, callback) {
 
 function play(player) {
   setTimeout(function () {
-    console.log('Jugando....');
-    getStatus(function (err, status) {
-      console.log('STATUS: ');
-      console.log(status);
+    getStatus(function (err, response) {
+      var status = response.status;
+      console.log('STATUS:  ' + status);
+      var board;
+      if (response.board) board = JSON.parse(response.board);
+
+      if (lastStatus !== status) {
+        if (status === API.CODES.ERROR) {
+          console.log('OCURRIÓ UN ERROR. INTENTA DE NUEVO');
+        } else if (status == API.CODES.ROOM_NOT_FULL) {
+          console.log('ESPERANDO A QUE SE UNAN LOS DEMÁS JUGADORES...');
+        }
+      }
+      lastStatus = status;
+      
+
+      if (status === API.CODES.WAIT) {
+        if (lastTurn !== response.turn) if (board) GameUtil.printBoard(board);
+        // TODO: print score
+        if (lastTurn !== response.turn) console.log('ESPERANDO A QUE EL JUGADOR %d TIRE', response.turn);
+        
+      }
+      lastTurn = response.turn;
+
+
+      if (status === API.CODES.YOUR_TURN) {
+        if (board) GameUtil.printBoard(board);
+        return promptMakeMove(function (position) {
+          make_move(position, function () {
+            play(player);
+          });
+        });
+      }
+
+      if (status === API.CODES.WIN) {
+        GameUtil.printBoard(board);
+        console.log('FELICIDADES ¡GANASTE!');
+        exit();
+      } else if (status === API.CODES.LOSE) {
+        GameUtil.printBoard(board);
+        console.log('EL JUEGO TERMINÓ. HAZ PERDIDO :-(');
+        exit();
+      } else if (status === API.CODES.DRAW) {
+        GameUtil.printBoard(board);
+        console.log('EL JUEGO TERMINÓ EN EMPATE');
+        exit();
+      }
+
+      play(player);
+
     });
-    play();
   }, TIMER);
+}
+
+function make_move(position, callback) {
+  request.put({url: SERVER_URL + API.MAKE_MOVE.uri, jar: jarContainer, form: {
+    'position': position
+  }}, function (err, res, body) {
+    if (err) return  console.log('ERROR. INTENTA DE NUEVO.');
+
+    if (body.status == 'OK') {
+      console.log('TIRO CORRECTO.');
+    } else if (body.status == API.CODES.INVALID_MOVE) {
+      console.log('POSICION INVÁLIDA. INTENTA DE NUEVO.');
+    }
+    if (callback) callback();
+  });
 }
 
 function getStatus(callback) {
   var url = SERVER_URL + API.STATUS.uri;
-  console.log('URL');
-  console.log(url);
   request.get({url: url, jar: jarContainer}, function (err, res, body) {
     if (err) return callback(err, null);
-    console.log('BODYYY');
-    console.log(body);
+    body = JSON.parse(body);
+    // console.log(body);
     return callback(err, body);
   });
 }
@@ -184,7 +257,7 @@ function main(answers) {
               console.error(err);
               return promptMenu(main);
             }
-            console.log(player);
+            // console.log(player);
             console.log('EMPEZANDO EL JUEGO');
             // Play game
             cookies = cookies;
@@ -217,7 +290,7 @@ function main(answers) {
               console.error(err);
               return promptMenu(main);
             }
-            console.log(player);
+            // console.log(player);
             // Play game
             play(player);
           });

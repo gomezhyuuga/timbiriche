@@ -174,7 +174,7 @@ describe('# Game Model', function() {
       game.printBoard();
       result = game.finished();
       // 0 means a draw
-      assert.equal(result, 0, 'there is a draw');
+      assert.equal(result, -1, 'there is a draw');
     });
   });
 

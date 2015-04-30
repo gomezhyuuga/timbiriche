@@ -17,6 +17,7 @@ var CODES = {
   LOSE: 'YOU_LOSE',
   NOT_TURN: 'NOT_YOUR_TURN',
   INVALID_MOVE: 'INVALID_MOVE',
+  AGAIN: 'AGAIN',
 }
 
 /* GET: list of all games. */
@@ -60,9 +61,10 @@ router.get('/status', function (req, res) {
 
     // Game has finished?
     var finished = game.finished();
-    if (finished) {
-      if (finished === 0) respone_data.status = CODES.DRAW;
-      if (finished === player.number) response_data.status = CODES.WIN;
+    console.log('FINISHED: ' + finished);
+    if (finished !== false) {
+      if (finished === -1) respone_data.status = CODES.DRAW;
+      else if (finished === player.number) response_data.status = CODES.WIN;
       else response_data.status = CODES.LOSE;
       return res.json(response_data);
     }
@@ -70,14 +72,14 @@ router.get('/status', function (req, res) {
     // If game not finished, then is the turn of someone
     if (game.turn == playerID) {
       response_data.status = CODES.YOUR_TURN;
-      response_data.turn = 'Player\'s ' + player.number + ' turn.';
+      response_data.turn = player.number;
       return res.json(response_data);
     }
     // GET NUMBER OF PLAYER TURN
     Player.findOne({_id: game.turn}, function (err, record) {
       if (err || !record) return res.json({status: CODES.ERROR});
 
-      response_data.turn = 'Player\'s ' + record.number + ' turn.';
+      response_data.turn = record.number;
       response_data.status = CODES.WAIT;
       return res.json(response_data);
     })
@@ -173,6 +175,7 @@ router.put('/join', function (req, res) {
 router.put('/make_move', function (req, res) {
   var playerID = req.body.player_id || req.session.player_id;
   var position = req.body.position;
+  console.log('MOVIN ON: %s by %s' + position, playerID);
   if (!position)
     return res.json({status: CODES.ERROR, msg: 'position is required'});
   if (!playerID)
@@ -210,7 +213,8 @@ router.put('/make_move', function (req, res) {
     } else {
       game.save(function (err) {
         if (err) return res.json({status: CODES.ERROR});
-        return res.json({status: 'OK', boxesClosed: result});
+        console.log('AGAIN');
+        return res.json({status: CODES.AGAIN, boxesClosed: result});
       });
     }
   });
@@ -227,10 +231,10 @@ function getPlayerGame(playerID, callback) {
         console.log('NO SE ENCONTRÓ EL JUEGO DEL JUGADOR');
         return callback(err);
       }
-      console.log('GAME');
-      console.log(game);
-      console.log('PLAYER');
-      console.log(player);
+      // console.log('GAME');
+      // console.log(game);
+      // console.log('PLAYER');
+      // console.log(player);
       callback(null, game, player);
     });
   });

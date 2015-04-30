@@ -161,7 +161,7 @@ gameSchema.methods.validMove = function(position) {
 /*
   returns
   a) the player number who won
-  b) 0 if there was a draw
+  b) -1 if there was a draw
   c) false if game is still in progress
 */
 gameSchema.methods.finished = function () {
@@ -174,7 +174,7 @@ gameSchema.methods.finished = function () {
   max = this.score[winner - 1];
   // Detect draw
   var winners = this.score.filter(function(val, index) { return val == max } );
-  if (winners.length > 1) winner = 0;
+  if (winners.length > 1) winner = -1;
   return winner;
 }
 

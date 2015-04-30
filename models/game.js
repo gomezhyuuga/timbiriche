@@ -9,7 +9,7 @@ var gameSchema = new Schema({
   board: String,
   playersJoined: { type: Number, default: 0 },
   boardSize: Number,
-  score: [Number],
+  score: String,
   turn: Schema.Types.ObjectId,
   availableSpaces: Number,
   'created_at': { type: Date, default: new Date() },
@@ -40,7 +40,9 @@ gameSchema.statics.generate = function (properties) {
   }
   game.setBoard(matrix);
   game.availableSpaces = n*(n-1)*2;
-  for(var i = 0; i < game.players; i++) game.score[i] = 0;
+  var score = [];
+  for(var i = 0; i < game.players; i++) score[i] = 0;
+  game.setScore(score);
   return game;
 }
 
@@ -51,10 +53,17 @@ gameSchema.methods.getBoard = function () {
 gameSchema.methods.setBoard = function (board) {
   this.board = JSON.stringify(board);
 }
+gameSchema.methods.getScore = function () {
+  return JSON.parse(this.score);
+}
+gameSchema.methods.setScore = function (score) {
+  this.score = JSON.stringify(score);
+}
 
 // Returns the number of number of boxes that were closed
 gameSchema.methods.makeMove = function(position, playerNum) {
   var board = this.getBoard();
+  var score = this.getScore();
   var row = +(position.substr(1));
   var col = +(position[0].charCodeAt(0) - 65);
 
@@ -79,7 +88,8 @@ gameSchema.methods.makeMove = function(position, playerNum) {
       closedBoxes++;
       // Mark closed square
       board[row][col - 1] = playerNum;
-      this.score[playerNum - 1] += 1;
+      score[playerNum - 1] += 1;
+      this.setScore(score);
     }
     // RIGHT BOX
     if (board[row] !== undefined
@@ -91,7 +101,8 @@ gameSchema.methods.makeMove = function(position, playerNum) {
       closedBoxes++;
       // Mark closed square
       board[row][col + 1] = playerNum;
-      this.score[playerNum - 1] += 1;
+      score[playerNum - 1] += 1;
+      this.setScore(score);
     }
   } else {
     // D2 => [2][3]
@@ -104,7 +115,8 @@ gameSchema.methods.makeMove = function(position, playerNum) {
       closedBoxes++;
       // Mark closed square
       board[row - 1][col] = playerNum;
-      this.score[playerNum - 1] += 1;
+      score[playerNum - 1] += 1;
+      this.setScore(score);
     }
     // LOWER BOX
     if (board[row + 2] !== undefined
@@ -115,7 +127,8 @@ gameSchema.methods.makeMove = function(position, playerNum) {
       closedBoxes++;
       // Mark closed square
       board[row + 1][col] = playerNum;
-      this.score[playerNum - 1] += 1;
+      score[playerNum - 1] += 1;
+      this.setScore(score);
     }
   }
   this.setBoard(board);
@@ -139,7 +152,8 @@ gameSchema.methods.printBoard = function() {
 
   // Player score
   console.log('# SCORE');
-  this.score.forEach(function (val, index) {
+  var score = this.getScore();
+  score.forEach(function (val, index) {
     console.log('Player %d: %d', index + 1, val);
   });
 }
@@ -154,6 +168,9 @@ gameSchema.methods.validMove = function(position) {
     || col < 0
     || col >= aSize) return false;
 
+  // Inside box
+  if (row % 2 !== 0 && col % 2 !== 0) return false;
+
   if (board[row][col] !== constants.BLANK_SYMBOL) return false;
 
   return true;
@@ -166,14 +183,15 @@ gameSchema.methods.validMove = function(position) {
 */
 gameSchema.methods.finished = function () {
   if (this.availableSpaces > 0) return false;
+  var score = this.getScore();
   var winner = 0;
   var max;
-  for (var i = 0; i < this.score.length; i++) {
-    if (this.score[i] > winner) winner = i + 1;
+  for (var i = 0; i < score.length; i++) {
+    if (score[i] > winner) winner = i + 1;
   }
-  max = this.score[winner - 1];
+  max = score[winner - 1];
   // Detect draw
-  var winners = this.score.filter(function(val, index) { return val == max } );
+  var winners = score.filter(function(val, index) { return val == max } );
   if (winners.length > 1) winner = -1;
   return winner;
 }

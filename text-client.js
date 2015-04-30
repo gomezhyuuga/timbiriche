@@ -9,6 +9,7 @@ var jarContainer = request.jar();
 var cookies;
 var lastStatus;
 var lastTurn;
+var playerNumber;
 var TIMER = 1000;
 
 request = request.defaults({jar: true});
@@ -28,21 +29,6 @@ function exit(code) {
 }
 function printAnswers(answers) {
   // console.log(JSON.stringify(answers, null, '    '));
-}
-function printBoard(matrix) {
-  if (matrix.length === 0) return undefined;
-  // Print column names as ABCD...
-  process.stdout.write('  ');
-  for (var i = 0; i < matrix.length; i++) {
-    process.stdout.write(' ' + String.fromCharCode(i + 65));
-  }
-  console.log('');
-
-  matrix.forEach(function (row, index) {
-    var num = index;
-    if (num < 10) num = ' ' + num;
-    console.log(num + ' ' + row.join(' '));
-  });
 }
 function validateNumberRange(num, min, max) {
   return (min <= num && num <= max) ? true : 'Numero dentro de rango inválido';
@@ -94,7 +80,7 @@ function promptCreateGame(callback) {
 }
 function promptJoinGame(games, callback) {
   var games = games;
-  console.log(games);
+  // console.log(games);
   inq.prompt({
       type: 'list',
       name: 'gameID',
@@ -124,7 +110,7 @@ function promptMakeMove(callback) {
 }
 
 function joinGame(gameID, callback) {
-  console.log('Trying to join game with ID: ' + gameID);
+  // console.log('Trying to join game with ID: ' + gameID);
   var url = SERVER_URL + API.JOIN_GAME.uri;
   request.put({url: url, jar: jarContainer, form: {
     'game_id': gameID
@@ -151,11 +137,14 @@ function play(player) {
   setTimeout(function () {
     getStatus(function (err, response) {
       var status = response.status;
-      console.log('STATUS:  ' + status);
+      var score = response.score;
+      // console.log('STATUS:  ' + status);
       var board;
       if (response.board) board = JSON.parse(response.board);
+      if (response.score) score = JSON.parse(response.score);
 
       if (lastStatus !== status) {
+        console.log('ERES EL JUGADOR %d', player);
         if (status === API.CODES.ERROR) {
           console.log('OCURRIÓ UN ERROR. INTENTA DE NUEVO');
         } else if (status == API.CODES.ROOM_NOT_FULL) {
@@ -166,7 +155,7 @@ function play(player) {
       
 
       if (status === API.CODES.WAIT) {
-        if (lastTurn !== response.turn) if (board) GameUtil.printBoard(board);
+        if (lastTurn !== response.turn) if (board) GameUtil.printBoard(board, score);
         // TODO: print score
         if (lastTurn !== response.turn) console.log('ESPERANDO A QUE EL JUGADOR %d TIRE', response.turn);
         
@@ -175,7 +164,8 @@ function play(player) {
 
 
       if (status === API.CODES.YOUR_TURN) {
-        if (board) GameUtil.printBoard(board);
+        console.log('ERES EL JUGADOR %d', player);
+        if (board) GameUtil.printBoard(board, score);
         return promptMakeMove(function (position) {
           make_move(position, function () {
             play(player);
@@ -184,15 +174,15 @@ function play(player) {
       }
 
       if (status === API.CODES.WIN) {
-        GameUtil.printBoard(board);
+        GameUtil.printBoard(board, score);
         console.log('FELICIDADES ¡GANASTE!');
         exit();
       } else if (status === API.CODES.LOSE) {
-        GameUtil.printBoard(board);
+        GameUtil.printBoard(board, score);
         console.log('EL JUEGO TERMINÓ. HAZ PERDIDO :-(');
         exit();
       } else if (status === API.CODES.DRAW) {
-        GameUtil.printBoard(board);
+        GameUtil.printBoard(board, score);
         console.log('EL JUEGO TERMINÓ EN EMPATE');
         exit();
       }
@@ -261,13 +251,13 @@ function main(answers) {
             console.log('EMPEZANDO EL JUEGO');
             // Play game
             cookies = cookies;
-            play(player);
+            play(player.playerNumber);
           });
         });
       });
       break;
     case 2: // List game
-      console.log('Listando juegos...');
+      // console.log('Listando juegos...');
       // GET LIST OF ALL AVAILABLE GAMES
       request(SERVER_URL + API.GET_GAMES.uri, function (err, res, body) {
         if (err) {
@@ -292,7 +282,7 @@ function main(answers) {
             }
             // console.log(player);
             // Play game
-            play(player);
+            play(player.playerNumber);
           });
         });
       });

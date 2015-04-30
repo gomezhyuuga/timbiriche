@@ -42,6 +42,8 @@ router.get('/status', function (req, res) {
     if (err) return res.json({status: CODES.ERROR});
     if (!game) return res.json({status: CODES.NOT_FOUND});
 
+    console.log('GAME');
+    console.log(game);
     var response_data = {
       players_joined: game.playersJoined,
       number_of_players: game.players,
@@ -62,8 +64,9 @@ router.get('/status', function (req, res) {
     // Game has finished?
     var finished = game.finished();
     console.log('FINISHED: ' + finished);
+    
     if (finished !== false) {
-      if (finished === -1) respone_data.status = CODES.DRAW;
+      if (finished === -1) response_data.status = CODES.DRAW;
       else if (finished === player.number) response_data.status = CODES.WIN;
       else response_data.status = CODES.LOSE;
       return res.json(response_data);
@@ -163,6 +166,7 @@ router.put('/join', function (req, res) {
         var obj = { playerID: player._id, playerNumber: player.number,
           game: player.game, status: 'OK'};
         req.session.player_id = player._id;
+        req.session.player_number = player.number;
 
         console.log(obj);
 
@@ -193,6 +197,12 @@ router.put('/make_move', function (req, res) {
       return res.json({status: CODES.INVALID_MOVE});
 
     var result = game.makeMove(position, player.number);
+    console.log('SCORE: ');
+    var score = game.score;
+    score[player.number - 1] += 1;
+    game.score = score;
+    console.log('CAMBIADO!');
+    console.log(game.score);
     // Increment turn if the player doesn't closed a box
     if (result === 0) {
       var number = player.number;

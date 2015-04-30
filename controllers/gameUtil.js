@@ -31,7 +31,7 @@ module.exports.createBoard = function createBoard(n) {
   }
   return matrix;
 }
-module.exports.printBoard = function printBoard(matrix) {
+module.exports.printBoard = function printBoard(matrix, score) {
   // Print column names as ABCD...
   process.stdout.write('  ');
   for (var i = 0; i < matrix.length; i++) {
@@ -41,6 +41,12 @@ module.exports.printBoard = function printBoard(matrix) {
 
   matrix.forEach(function (row, index) {
     console.log(fnum(index) + ' ' + row.join(' '));
+  });
+
+  // Player score
+  console.log('# SCORE');
+  score.forEach(function (val, index) {
+    console.log('Player %d: %d', index + 1, val);
   });
 }
 

@@ -33,6 +33,24 @@ function printAnswers(answers) {
 function validateNumberRange(num, min, max) {
   return (min <= num && num <= max) ? true : 'Numero dentro de rango inválido';
 }
+function printBoard(matrix, score) {
+  // Print column names as ABCD...
+  process.stdout.write('  ');
+  for (var i = 0; i < matrix.length; i++) {
+    process.stdout.write(' ' + String.fromCharCode(i + 65));
+  }
+  console.log('');
+
+  matrix.forEach(function (row, index) {
+    console.log(fnum(index) + ' ' + row.join(' '));
+  });
+
+  // Player score
+  console.log('# SCORE');
+  score.forEach(function (val, index) {
+    console.log('Player %d: %d', index + 1, val);
+  });
+}
 
 function promptMenu(callback) {
   inq.prompt({

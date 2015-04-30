@@ -1,6 +1,11 @@
 var inq     = require('inquirer');
 var request = require('request');
 var async   = require('async');
+var FileCookieStore = require('tough-cookie-filestore');
+var jarContainer = request.jar(new FileCookieStore('cookies.json'));
+var cookies;
+
+TIMER = 1000;
 
 request = request.defaults({jar: true});
 
@@ -9,6 +14,7 @@ var API = {
   'GET_GAMES': { method: 'GET', uri: '/games/'},
   'CREATE_GAME': { method: 'POST', uri: '/games/new'},
   'JOIN_GAME': { method: 'PUT', uri: '/join'},
+  'STATUS': { method: 'GET', uri: '/status'},
 }
 
 var MENU_CHOICES = [
@@ -104,7 +110,8 @@ function promptJoinGame(games, callback) {
 
 function joinGame(gameID, callback) {
   console.log('Trying to join game with ID: ' + gameID);
-  request.put({url: SERVER_URL + API.JOIN_GAME.uri, form: {
+  var url = SERVER_URL + API.JOIN_GAME.uri;
+  request.put({url: url, jar: jarContainer, form: {
     'game_id': gameID
   }}, function (err, res, body) {
     if (err) {
@@ -112,18 +119,42 @@ function joinGame(gameID, callback) {
       console.error(err);
       return promptMenu(main);
     }
+    cookies = jarContainer.getCookies(url);
+    console.log('COOKIES');
+    console.log(cookies);
     body = JSON.parse(body);
     console.log(body);
     if (body.status === 'FULL') {
       console.log('JUEGO LLENO. INTENTA OTRO JUEGO.');
       return promptMenu(main);
     }
-    if (callback) return callback(null, body);
+    if (callback) return callback(null, body, cookies);
   });
 }
-function play(player) {
 
+function play(player) {
+  setTimeout(function () {
+    console.log('Jugando....');
+    getStatus(function (err, status) {
+      console.log('STATUS: ');
+      console.log(status);
+    });
+    play();
+  }, TIMER);
 }
+
+function getStatus(callback) {
+  var url = SERVER_URL + API.STATUS.uri;
+  console.log('URL');
+  console.log(url);
+  request.get({url: url, jar: jarContainer}, function (err, res, body) {
+    if (err) return callback(err, null);
+    console.log('BODYYY');
+    console.log(body);
+    return callback(err, body);
+  });
+}
+
 function main(answers) {
   switch(answers.menu) {
     case 1:
@@ -147,7 +178,7 @@ function main(answers) {
             return promptMenu(main);
           }
           var gameID = body.gameID;
-          joinGame(gameID, function (err, player) {
+          joinGame(gameID, function (err, player, cook) {
             if (err) {
               console.error('ERROR UNIÉNDOSE AL JUEGO. INTENTA NUEVAMENTE.');
               console.error(err);
@@ -156,6 +187,8 @@ function main(answers) {
             console.log(player);
             console.log('EMPEZANDO EL JUEGO');
             // Play game
+            cookies = cookies;
+            play(player);
           });
         });
       });
@@ -178,7 +211,7 @@ function main(answers) {
           return promptMenu(main);
         }
         promptJoinGame(games, function (answers) {
-          joinGame(answers.gameID, function (err, player) {
+          joinGame(answers.gameID, function (err, player, req) {
             if (err) {
               console.error('No se pudo unir al juego. Intenta de nuevo.');
               console.error(err);

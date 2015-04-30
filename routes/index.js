@@ -181,7 +181,8 @@ router.put('/make_move', function (req, res) {
   getPlayerGame(playerID, function (err, game, player) {
     if (err || !game) return res.json({status: CODES.ERROR});
 
-    if (game.turn.toString() != player._id.toString()) return res.json({status: CODES.NOT_TURN});
+    if (game.turn.toString() != player._id.toString())
+      return res.json({status: CODES.NOT_TURN});
 
     // if (game.isFull())
 

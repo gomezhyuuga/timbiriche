@@ -240,7 +240,7 @@ function main(answers) {
   switch(answers.menu) {
     case 1:
       // Create game
-      console.log('Creando nuevo juego...');
+      // console.log('Creando nuevo juego...');
       promptCreateGame(function(answers) {
         request.post({url: SERVER_URL + API.CREATE_GAME.uri, form: {
           name: answers.gameName,
@@ -253,7 +253,7 @@ function main(answers) {
             return promptMenu(main);
           }
           body = JSON.parse(body);
-          console.log(body);
+          // console.log(body);
           if (body.status == 'EXISTS') {
             console.log('EL JUEGO YA EXISTE. INTENTA CON OTRO NOMBRE.');
             return promptMenu(main);

@@ -185,10 +185,10 @@ gameSchema.methods.finished = function () {
   if (this.availableSpaces > 0) return false;
   var score = this.getScore();
   var winner = 0;
-  var max;
-  for (var i = 0; i < score.length; i++) {
-    if (score[i] > winner) winner = i + 1;
-  }
+  var max = Math.max.apply(null, score);
+  winner = score.indexOf(Math.max.apply(Math, score));
+  winner++;
+  
   max = score[winner - 1];
   // Detect draw
   var winners = score.filter(function(val, index) { return val == max } );

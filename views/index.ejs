@@ -1,11 +1,243 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <title><%= title %></title>
-    <link rel='stylesheet' href='/stylesheets/style.css' />
-  </head>
-  <body>
-    <h1><%= title %></h1>
-    <p>Welcome to <%= title %></p>
-  </body>
+<html lang="en">
+<head>
+  <!-- Basic Page Needs
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <meta charset="utf-8">
+  <title>Juego de Timbiriche</title>
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <!-- Mobile Specific Metas
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- FONT
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+
+  <!-- CSS
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <link rel="stylesheet" href="skeleton/css/normalize.css">
+  <link rel="stylesheet" href="skeleton/css/skeleton.css">
+  <link rel="stylesheet" href="font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="stylesheets/timbiriche.css">
+
+  <!-- Favicon
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <link rel="icon" type="image/png" href="images/favicon.png">
+</head>
+<body>
+
+  
+  <div class="container">
+    
+    <h1>
+      <i class="fa fa-fw fa-lg fa-pencil-square-o"></i>
+      Timbiriche
+    </h1>
+
+    <div class="row notice hidden" id="errors">
+      <h4 class="red">ERROR</h4>
+      <p class="red">Esto es un error</p>
+    </div>
+
+    <!-- User input
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <div class="row hidden" id="section_create_game">
+
+      <div class="four columns offset-by-four">
+        <form id="form_create_game">
+          <label for="game_name">Nombre del juego</label>
+          <input type="text" id="game_name" name="game[name]"
+            class="u-full-width"
+            required
+            placeholder="Introduce el nombre del juego">
+          <div class="row">
+            <div class="six columns">
+              <label for="game_players">Jugadores</label>
+              <input type="number" name="game[players]" id="game_players"
+                class="u-full-width"
+                min="2"
+                max="4"
+                placeholder="#"
+                required>
+            </div>
+            <div class="six columns">
+              <label for="game_size">Tablero</label>
+              <input type="number" name="game[size]"id="game_size"
+                class="u-full-width"
+                min="3"
+                max="8"
+                placeholder="#"
+                required>
+            </div>
+          </div>
+          <button class="button-alt u-full-width" type="submit">
+            <i class="fa fa-fw fa-2x fa-gamepad"></i>
+            Empezar juego
+          </button>
+        </form>
+      </div>
+    </div>
+
+
+    
+    <!-- BUTTONS
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <div class="row" id="section_buttons">
+      <!-- IMAGE -->
+      <div class="two columns offset-by-two">
+        <img src="images/tec.png" alt="Timbiriche"
+          class="u-max-full-width styled">
+      </div>
+      <!-- BUTTONS -->
+      <div class="six columns">
+        <button type="submit" class="button-primary u-full-width"
+          id="btn_create_game">
+          <i class="fa fa-fw fa-2x fa-plus-circle"></i>
+          Crear juego
+        </button>
+        <button type="submit" class="button-primary u-full-width"
+          id="btn_join_game">
+          <i class="fa fa-fw fa-2x fa-laptop"></i>
+          Unirse al juego
+        </button>
+      </div>
+
+    </div>
+
+    <!-- User input
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <div class="row hidden" id="section_join_game">
+      <div class="four columns offset-by-four">
+        <form id="form_join_game">
+          <label for="game_id">Unirse al juego</label>
+          <p class="notice hidden" id="no_games">No hay disponible ningún juego</p>
+          <div id="select_game">
+            <select name="game[id]" id="game_id" class="u-full-width" required>
+            </select>
+            <button class="button-alt u-full-width" type="submit">
+              <i class="fa fa-fw fa-2x fa-gamepad"></i>
+              Empezar juego
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Status
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <div class="row hidden" id="section_status">
+
+      <div class="eight columns offset-by-two">
+        <table class="u-full-width table">
+          <thead>
+            <tr>
+              <th class="small">JUGADOR</th>
+              <th>ESTADO</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <strong id="status_player_number">1</strong>
+              </td>
+              <td>
+                <i class="fa fa-fw fa-spinner fa-pulse"></i>
+                <span id="status" class="green">Algún estado</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+
+    <!-- Game board
+    –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+    <div class="row hidden" id="section_game_board">
+      <div id="game_board">
+        <table>
+          <!-- TABLERO DE EJEMPLO -->
+          <tr>
+            <td class="dot active"></td>
+            <td class="horizontal line active"></td>
+            <td class="dot active"></td>
+            <td class="horizontal line">
+              <a href="/make_move/A0">A0</a>
+            </td>
+            <td class="dot"></td>
+            <td class="horizontal line"></td>
+            <td class="dot"></td>
+          </tr>
+          <tr>
+            <td class="vertical line"></td>
+            <td class="empty"></td>
+            <td class="vertical line"></td>
+            <td class="empty"></td>
+            <td class="vertical line"></td>
+            <td class="empty"></td>
+            <td class="vertical line"></td>
+          </tr>
+          <tr>
+            <td class="dot"></td>
+            <td class="horizontal line"></td>
+            <td class="dot"></td>
+            <td class="horizontal line"></td>
+            <td class="dot"></td>
+            <td class="horizontal line"></td>
+            <td class="dot"></td>
+          </tr>
+          <tr>
+            <td class="vertical line"></td>
+            <td class="empty"></td>
+            <td class="vertical line"></td>
+            <td class="empty"></td>
+            <td class="vertical line"></td>
+            <td class="empty"></td>
+            <td class="vertical line"></td>
+          </tr>
+          <tr>
+            <td class="dot"></td>
+            <td class="horizontal line"></td>
+            <td class="dot active"></td>
+            <td class="horizontal line active"></td>
+            <td class="dot active"></td>
+            <td class="horizontal line"></td>
+            <td class="dot"></td>
+          </tr>
+          <tr>
+            <td class="vertical line"></td>
+            <td class="empty"></td>
+            <td class="vertical line active"></td>
+            <td class="empty">
+              <p class="point">1</p>
+            </td>
+            <td class="vertical line active"></td>
+            <td class="empty"></td>
+            <td class="vertical line"></td>
+          </tr>
+          <tr>
+            <td class="dot"></td>
+            <td class="horizontal line"></td>
+            <td class="dot active"></td>
+            <td class="horizontal line active"></td>
+            <td class="dot active"></td>
+            <td class="horizontal line"></td>
+            <td class="dot"></td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <footer>
+      <h6>Elaborado por Iván Díaz y Fernando Gómez &copy; | ITESM CEM (2015)</h6>
+    </footer>
+  </div>
+
+
+  <script src="javascripts/jquery-1.11.3.min.js"></script>
+  <script src="javascripts/timbiriche.js"></script>
+</body>
 </html>

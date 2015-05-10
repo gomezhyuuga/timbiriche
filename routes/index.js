@@ -20,6 +20,10 @@ var CODES = {
   AGAIN: 'AGAIN',
 }
 
+router.get('/', function (req, res) {
+  res.render('index.ejs');
+});
+
 /* GET: list of all games. */
 router.get('/games/', function (req, res) {
   Game.find({ started: false})
@@ -90,6 +94,14 @@ router.get('/status', function (req, res) {
 });
 
 /* POST: create a new game */
+/**
+  returns:
+  [1] SUCCESS
+    status: OK
+    gameID: ID of the game created
+  [2] status: EXISTS
+  [3] status: ERROR
+**/
 router.post('/games/new', function (req, res) {
   var name = req.body.name;
   var players = req.body.players;
@@ -122,6 +134,16 @@ router.post('/games/new', function (req, res) {
 });
 
 /* PUT: request to join a game */
+/**
+  params: game_id
+  returns:
+  [1] OK
+    playerID: ID OF THE PLAYER
+    playerNumber: NUMBER ASSIGNED TO THE PLAYER
+    game: ID OF THE GAME
+  [2] NOT_FOUND
+  [3] ERROR
+**/
 router.put('/join', function (req, res) {
   var gameID = req.body.game_id;
   console.log('User requested to join game %s: ', gameID);
@@ -131,14 +153,6 @@ router.put('/join', function (req, res) {
       return res.json({status: CODES.NOT_FOUND});
     }
     var game = record;
-    /* NOT NECESARY IF WE START THE GAME WHEN ITS FULL */
-    // Check if room is not full
-    // if (record.playersJoined == record.players) { // Full
-    //   console.log('FULL');
-    //   res.json({status: CODES.ROOM_FULL});
-    //   return;
-    // }
-    // Create player
     var playerNumber = record.playersJoined + 1;
     createPlayer(gameID, playerNumber, function (err, record) {
       var player = record;
@@ -176,6 +190,14 @@ router.put('/join', function (req, res) {
   });
 });
 /* PUT: make move */
+/**
+  returns:
+  [1] OK
+    boxesClosed: result
+  [2] ERROR
+  [3] NOT_TURN
+  [4] INVALID_MOVE
+**/
 router.put('/make_move', function (req, res) {
   var playerID = req.body.player_id || req.session.player_id;
   var position = req.body.position;
@@ -190,8 +212,6 @@ router.put('/make_move', function (req, res) {
 
     if (game.turn.toString() != player._id.toString())
       return res.json({status: CODES.NOT_TURN});
-
-    // if (game.isFull())
 
     if (!game.validMove(position))
       return res.json({status: CODES.INVALID_MOVE});
@@ -224,7 +244,7 @@ router.put('/make_move', function (req, res) {
       game.save(function (err) {
         if (err) return res.json({status: CODES.ERROR});
         console.log('AGAIN');
-        return res.json({status: CODES.AGAIN, boxesClosed: result});
+        return res.json({status: 'OK', msg: CODES.AGAIN, boxesClosed: result});
       });
     }
   });

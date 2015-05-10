@@ -10,18 +10,18 @@ Dotsandboxes game made with NodeJS
 
 **Now you can play either from the CLI or a web browser**
 **CLI:**
-  node text-client http://localhost:3000/
+    node text-client http://localhost:3000/
 
 **Web:**
-[http://localhost:300/]
+    (http://localhost:300/)
 
 # Built with
 Many technologies were used in this project:
-- Skeleton [http://getskeleton.com/]
-- Node.js (0.12) [https://nodejs.org/]
-- Inquirer.js [https://github.com/SBoudrias/Inquirer.js/]
-- jQuery [http://jquery.com/]
-- Font Awesome [http://fontawesome.io/]
+- [Skeleton](http://getskeleton.com/)
+- [Node.js v0.12](https://nodejs.org/)
+- [Inquirer.js](https://github.com/SBoudrias/Inquirer.js/)
+- [jQuery](http://jquery.com/)
+- [Font Awesome](http://fontawesome.io/)
 
 ## Authors
 * Fernando Gómez <gomezhyuuga>

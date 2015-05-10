@@ -128,6 +128,7 @@ function joinGame(game_id) {
       var status = resultado.status;
       PLAYER_ID = resultado.playerID;
       PLAYER_NUMBER = resultado.playerNumber;
+      $('#status_player_number').text(PLAYER_NUMBER);
       if (status === 'OK') {
         $('#section_game_board').show();
         console.log('UNIDO AL JUEGO');
@@ -138,10 +139,6 @@ function joinGame(game_id) {
       }
     }
   });
-}
-
-function desactivarTablero() {
-
 }
 
 //----------------------------------------------------------------------------

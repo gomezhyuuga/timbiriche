@@ -1,5 +1,5 @@
 # Dots and boxes game
-Dotsandboxes game made with NodeJS
+Dots-and-boxes game made with NodeJS
 
 # Installation
 1. Clone the repository
@@ -13,7 +13,7 @@ Dotsandboxes game made with NodeJS
     node text-client http://localhost:3000/
 
 **Web:**
-    (http://localhost:300/)
+    (http://localhost:3000/)
 
 # Built with
 Many technologies were used in this project:
@@ -25,5 +25,4 @@ Many technologies were used in this project:
 
 ## Authors
 * Fernando Gómez <gomezhyuuga>
-* Iván Díaz
-* Ariel Ortiz (base code)
+* Ariel Ortiz (template server)

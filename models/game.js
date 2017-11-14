@@ -1,9 +1,10 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 var constants = require('../constants.js');
+var DEFAULT_NAME = 'No name';
 
 var gameSchema = new Schema({
-  name: { type: String, default: 'Sin nombre', unique: true},
+  name: { type: String, default: DEFAULT_NAME, unique: true},
   players: { type: Number, default: 2 },
   started: { type: Boolean, default: false },
   board: String,

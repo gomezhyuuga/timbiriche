@@ -175,16 +175,16 @@ function esperaTurno(player_id) {
         switch (status) {
           case 'YOUR_TURN':
             $('body').css('cursor', 'auto');
-            updateStatus('Es tu turno', 'green');
+            updateStatus('It\'s your turn', 'green');
             break;
 
           case 'WAIT':
-            updateStatus('Es el turno del jugador ' + turn, 'red');
+            updateStatus('Player ' + turn + ' is making a move', 'red');
             setTimeout(ticToc, PAUSA);
             break;
 
           case 'NOT_FULL':
-            msg = 'Esperando a los jugadores';
+            msg = 'Waiting for players';
             msg += ' (' + players_joined + '/' + number_of_players + ')';
             updateStatus(msg);
             $('#section_game_board').hide();
